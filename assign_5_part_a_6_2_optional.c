@@ -3,6 +3,7 @@
 
 #define MAX_VERTEX 11
 #define INFI 9999
+#define ENABLE_DEBUG 0  // 0 to disable debugs, 1 to enable debugs
 
 struct City
 {
@@ -11,9 +12,14 @@ struct City
   int root;
 };
 
+struct CityName
+{
+  char name;
+};
+
 int findMinQ(struct City cityQ[MAX_VERTEX]);
 int printQ(struct City cityQ[MAX_VERTEX]);
-void printPath(int rootPath[], int dest);
+void printPath(struct CityName cityname[MAX_VERTEX], int rootPath[], int dest, int invert);   // invert = 0 means Src to 0 and invert = 1 means 0 to src
 
 int findMinQ(struct City cityQ[MAX_VERTEX])
 {
@@ -34,7 +40,7 @@ int findMinQ(struct City cityQ[MAX_VERTEX])
     }
   }
 
-  printf("Returning retCity from Q=%d\n", retCity);
+  // printf("Returning retCity from Q=%d\n", retCity);
   return retCity;
 }
 
@@ -53,16 +59,30 @@ int printQ(struct City cityQ[MAX_VERTEX])
   return 0;
 }
 
-void printPath(int rootPath[], int dest)
+void printPath(struct CityName cityname[MAX_VERTEX], int rootPath[], int dest, int invert)
 {
-  printf("%d->", dest);
-  if (rootPath[dest] == 0)
+  if (invert == 0)    // From Src to 0
   {
-    printf("%d", rootPath[dest]);
-    return;
-  }
+    printf("%c->", cityname[dest].name);
+    if (rootPath[dest] == 0)
+    {
+      // printf("%c", cityname[rootPath[dest]].name);                           // Uncomment to have last node as capitol included
+      return;
+    }
 
-  printPath(rootPath, rootPath[dest]);
+    printPath(&cityname[0], rootPath, rootPath[dest], invert);
+  }
+  else                // From 0 to Src
+  {
+    if (rootPath[dest] == 0)
+    {
+      printf("%c->%c", cityname[rootPath[dest]].name, cityname[dest].name);
+      return;
+    }
+
+    printPath(&cityname[0], rootPath, rootPath[dest], invert);
+    printf("->%c", cityname[dest].name);
+  }
 }
 
 int main (int argc, char *argv[])
@@ -79,6 +99,8 @@ int main (int argc, char *argv[])
                                       {15, INFI, INFI, INFI, 10, INFI, INFI, INFI, 0, INFI, INFI},\
                                       {1, 20, INFI, INFI, INFI, 19, INFI, INFI, INFI, 0, INFI},\
                                       {INFI, INFI, 8, INFI, INFI, 13, INFI, INFI, INFI, INFI, 0}};
+
+  struct CityName cityname[MAX_VERTEX];
 
   int D[MAX_VERTEX] = {INFI};         // Resulting shortest dist a to each city, default all to infinite
   struct City cityQ[MAX_VERTEX * MAX_VERTEX];
@@ -98,6 +120,7 @@ int main (int argc, char *argv[])
   {
     D[i] = INFI;
     finalizedCity[i] = 0;
+    cityname[i].name = (char)(0x61 + (char)i);      // Load alpha names of city
   }
 
   D[0] = 0;       // City a's distance to itself is 0
@@ -117,10 +140,10 @@ int main (int argc, char *argv[])
         cityQ[k].vertex = j;
         cityQ[k].distance = graph[i][j];
         cityQ[k++].root = i;
-        printf("\n--->Added to Q Root=%d Vertex=%d Dis=%d\n", i, j, graph[i][j]);
+        // printf("\n--->Added to Q Root=%d Vertex=%d Dis=%d\n", i, j, graph[i][j]);
       }
     }
-    printQ(&cityQ[0]);  // Print current Q
+    // printQ(&cityQ[0]);  // Print current Q
 
     qCity = findMinQ(&cityQ[0]);      // Vertex who has min distance in adjecent
 
@@ -129,8 +152,8 @@ int main (int argc, char *argv[])
       break;
     }
 
-    printf("Working on Vertex: %d\n", cityQ[qCity].vertex);
-    printf("D[%d]=> Current Dist: %d, Possible distance:%d\n", cityQ[qCity].vertex, D[cityQ[qCity].vertex], (D[cityQ[qCity].root] + graph[cityQ[qCity].root][cityQ[qCity].vertex]));
+    // printf("Working on Vertex: %d\n", cityQ[qCity].vertex);
+    // printf("D[%d]=> Current Dist: %d, Possible distance:%d\n", cityQ[qCity].vertex, D[cityQ[qCity].vertex], (D[cityQ[qCity].root] + graph[cityQ[qCity].root][cityQ[qCity].vertex]));
     if (D[cityQ[qCity].vertex] > (D[cityQ[qCity].root] + graph[cityQ[qCity].root][cityQ[qCity].vertex]))
     {
       D[cityQ[qCity].vertex] = D[cityQ[qCity].root] + graph[cityQ[qCity].root][cityQ[qCity].vertex];
@@ -140,7 +163,7 @@ int main (int argc, char *argv[])
 
     i = cityQ[qCity].vertex;
 
-    printf("DONE: i=%d D[i]=%d rootPath[i]=%d\n", cityQ[qCity].vertex, D[cityQ[qCity].vertex], rootPath[cityQ[qCity].vertex]);
+    // printf("DONE: i=%d D[i]=%d rootPath[i]=%d\n", cityQ[qCity].vertex, D[cityQ[qCity].vertex], rootPath[cityQ[qCity].vertex]);
     cityQ[qCity].vertex = INFI;       // Reset the one we know is done
     cityQ[qCity].distance = INFI;
     cityQ[qCity].root = INFI;
@@ -159,10 +182,14 @@ int main (int argc, char *argv[])
     printf("*************************************\n");
     printf("Min distance- %d - %d\n", i, D[i]);
     printf("Path of %d: \n", i);
-    printPath(rootPath, i);
+    printPath(&cityname[0], rootPath, i, 1);
     printf("\n");
   }
 
+  printf("Shortest Path from d to i via a is: ");
+  printPath(&cityname[0], rootPath, 3, 0);
+  printPath(&cityname[0], rootPath, 8, 1);
+  printf("\n");
 
   return 0;
 }
