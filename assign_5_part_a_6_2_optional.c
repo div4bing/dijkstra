@@ -55,15 +55,14 @@ int printQ(struct City cityQ[MAX_VERTEX])
 
 void printPath(int rootPath[], int dest)
 {
+  printf("%d->", dest);
   if (rootPath[dest] == 0)
   {
-    printf("%d->", dest);
+    printf("%d", rootPath[dest]);
     return;
   }
 
   printPath(rootPath, rootPath[dest]);
-
-  printf("%d->", dest);
 }
 
 int main (int argc, char *argv[])
@@ -148,20 +147,22 @@ int main (int argc, char *argv[])
     z++;
   }
 
-  for (i = 0; i < MAX_VERTEX; i++)
-  {
-    printf("*************************************\n");
-    printf("Min distance- %d - %d\n", i, D[i]);
-    printf("Path of %d: \n", i);
-    // printPath(rootPath, i);
-    printf("\n");
-  }
-
   printf("PATH:\n");
   for (i = 0; i < MAX_VERTEX; i++)
   {
     printf("(%d = %d): ", i, rootPath[i]);
   }
   printf("\n");
+
+  for (i = 0; i < MAX_VERTEX; i++)
+  {
+    printf("*************************************\n");
+    printf("Min distance- %d - %d\n", i, D[i]);
+    printf("Path of %d: \n", i);
+    printPath(rootPath, i);
+    printf("\n");
+  }
+
+
   return 0;
 }
